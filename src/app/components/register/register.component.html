@@ -1,0 +1,143 @@
+<!-- Top Banner Popup -->
+<div class="top-banner success-banner" *ngIf="successMessage">
+  <span>{{ successMessage }}</span>
+  <button class="close-btn" (click)="successMessage = ''">Close</button>
+</div>
+
+<div class="top-banner error-banner" *ngIf="errorMessage">
+  <span>{{ errorMessage }}</span>
+  <button class="close-btn" (click)="errorMessage = ''">Close</button>
+</div>
+
+<div class="auth-container">
+  <div class="auth-box register-box">
+    <div class="register-left">
+      <div class="logo">
+        <span class="l-blue">F</span>
+        <span class="l-red">u</span>
+        <span class="l-yellow">n</span>
+        <span class="l-blue">d</span>
+        <span class="l-green">o</span>
+        <span class="l-red">o</span>
+      </div>
+      <h2>Create your Fundoo Account</h2>
+      <p class="subtitle">to continue to Gmail</p>
+
+      <form (ngSubmit)="onSubmit(registerForm)" #registerForm="ngForm">
+        <div class="row">
+          <div class="input-group">
+            <input 
+              type="text" 
+              name="firstName" 
+              placeholder="First name*" 
+              [(ngModel)]="user.firstName" 
+              required
+              [pattern]="NAME_PATTERN"
+              #firstNameInput="ngModel"
+            />
+            <div class="error-msg" *ngIf="firstNameInput.invalid && (firstNameInput.dirty || firstNameInput.touched || submitted)">
+              <span *ngIf="firstNameInput.errors?.['required']">First name is required</span>
+              <span *ngIf="firstNameInput.errors?.['pattern']">Min 3 letters & starts with capital</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <input 
+              type="text" 
+              name="lastName" 
+              placeholder="Last name*" 
+              [(ngModel)]="user.lastName" 
+              required
+              [pattern]="NAME_PATTERN"
+              #lastNameInput="ngModel"
+            />
+            <div class="error-msg" *ngIf="lastNameInput.invalid && (lastNameInput.dirty || lastNameInput.touched || submitted)">
+              <span *ngIf="lastNameInput.errors?.['required']">Last name is required</span>
+              <span *ngIf="lastNameInput.errors?.['pattern']">Min 3 letters & starts with capital</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <input 
+            type="email" 
+            name="email" 
+            placeholder="Email*" 
+            [(ngModel)]="user.email" 
+            required
+            [pattern]="EMAIL_PATTERN"
+            #emailInput="ngModel"
+          />
+          <div class="error-msg" *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched || submitted)">
+            <span *ngIf="emailInput.errors?.['required']">Email is required</span>
+            <span *ngIf="emailInput.errors?.['pattern']">Enter a valid email address</span>
+          </div>
+        </div>
+
+        <!-- <div class="input-group">
+          <input 
+            type="text" 
+            name="mobileNumber" 
+            placeholder="Mobile number (optional)" 
+            [(ngModel)]="user.mobileNumber"
+          />
+        </div> -->
+
+        <div class="row">
+          <div class="input-group">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              name="password" 
+              placeholder="Password*" 
+              [(ngModel)]="user.password" 
+              required
+              [pattern]="PASSWORD_PATTERN"
+              #passwordInput="ngModel"
+            />
+            <div class="error-msg" *ngIf="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched || submitted)">
+              <span *ngIf="passwordInput.errors?.['required']">Password is required</span>
+              <span *ngIf="passwordInput.errors?.['pattern']">Min 8 chars (1 upper, 1 lower, 1 digit)</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <input 
+              [type]="showPassword ? 'text' : 'password'" 
+              name="confirmPassword" 
+              placeholder="Confirm Password*" 
+              [(ngModel)]="user.confirmPassword" 
+              required
+              #confirmPasswordInput="ngModel"
+            />
+            <div class="error-msg" *ngIf="(confirmPasswordInput.dirty || confirmPasswordInput.touched || submitted) && (confirmPasswordInput.invalid || user.password !== user.confirmPassword)">
+              <span *ngIf="confirmPasswordInput.errors?.['required']">Confirm password is required</span>
+              <span *ngIf="!confirmPasswordInput.errors?.['required'] && user.password !== user.confirmPassword">Passwords do not match</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <input 
+            type="checkbox" 
+            id="show-pass" 
+            name="showPassword" 
+            [(ngModel)]="showPassword"
+          />
+          <label for="show-pass">Show password</label>
+        </div>
+
+
+        <div class="auth-footer">
+          <a routerLink="/login" class="create-link">Sign in instead</a>
+          <button type="submit" class="btn-submit">Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="register-right">
+
+  <div class="shield-icon">
+    <img src="assets/images/signup-image.jpeg" alt="Signup Image">
+  </div>
+
+</div>
+  </div>
+</div>  

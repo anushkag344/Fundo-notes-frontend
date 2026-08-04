@@ -1,0 +1,135 @@
+<!-- Top Banner Popup -->
+<div class="top-banner error-banner" *ngIf="errorMessage">
+  <span>{{ errorMessage }}</span>
+  <button class="close-btn" (click)="errorMessage = ''">Close</button>
+</div>
+
+<div class="top-banner success-banner" *ngIf="successMessage">
+  <span>{{ successMessage }}</span>
+  <button class="close-btn" (click)="successMessage = ''">Close</button>
+</div>
+
+<div class="auth-container">
+
+  <div class="auth-box login-box">
+
+    <div class="logo">
+      <span class="l-blue">F</span>
+      <span class="l-red">u</span>
+      <span class="l-yellow">n</span>
+      <span class="l-blue">d</span>
+      <span class="l-green">o</span>
+      <span class="l-red">o</span>
+    </div>
+
+    <h2>Sign in</h2>
+
+    <p class="subtitle">
+      Use your Fundoo Account
+    </p>
+
+    <form
+      #loginForm="ngForm"
+      (ngSubmit)="onSubmit()">
+
+      <div class="input-group">
+
+        <input
+          type="email"
+          name="email"
+          placeholder="Email*"
+          [(ngModel)]="credentials.email"
+          required
+          [pattern]="EMAIL_PATTERN"
+          #emailInput="ngModel">
+
+        <div
+          class="error-msg"
+          *ngIf="emailInput.invalid && (emailInput.touched || submitted)">
+
+          <span *ngIf="emailInput.errors?.['required']">
+            Email is required
+          </span>
+
+          <span *ngIf="emailInput.errors?.['pattern']">
+            Enter a valid email address
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="input-group password-group">
+
+        <input
+          [type]="showPassword ? 'text' : 'password'"
+          name="password"
+          placeholder="Password*"
+          [(ngModel)]="credentials.password"
+          required
+          #passwordInput="ngModel">
+
+        <span
+          class="material-icons-outlined toggle-password-icon"
+          (click)="showPassword = !showPassword"
+          [title]="showPassword ? 'Hide password' : 'Show password'">
+          {{ showPassword ? 'visibility' : 'visibility_off' }}
+        </span>
+
+        <div
+          class="error-msg"
+          *ngIf="passwordInput.invalid && (passwordInput.touched || submitted)">
+
+          <span *ngIf="passwordInput.errors?.['required']">
+            Password is required
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="forgot-wrapper">
+
+        <a
+          routerLink="/forgot-password"
+          class="forgot-link">
+
+          Forgot password?
+
+        </a>
+
+      </div>
+
+
+
+      <div class="auth-footer">
+
+        <a
+          routerLink="/register"
+          class="create-link">
+
+          Create account
+
+        </a>
+
+        <button
+          type="submit"
+          class="btn-submit"
+          [disabled]="isLoading">
+
+          <span *ngIf="!isLoading">Sign In</span>
+
+          <span *ngIf="isLoading" class="spinner-container">
+            <span class="spinner-ring"></span>
+            <span>Signing in...</span>
+          </span>
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>

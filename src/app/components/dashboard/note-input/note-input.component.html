@@ -1,0 +1,181 @@
+<!-- COLLAPSED STATE -->
+<div class="note-box collapsed" *ngIf="!isExpanded" (click)="expand($event)">
+  <input
+    type="text"
+    placeholder="Take a note..."
+    readonly>
+
+  <div class="icons">
+    <button title="New list" type="button">
+      <span class="material-icons-outlined">check_box</span>
+    </button>
+    <button title="New note with drawing" type="button">
+      <span class="material-icons-outlined">brush</span>
+    </button>
+    <button title="New note with image" type="button">
+      <span class="material-icons-outlined">image</span>
+    </button>
+  </div>
+</div>
+
+<div #noteBox class="note-box expanded" *ngIf="isExpanded" [style.background-color]="color">
+  <div class="title-row">
+    <input
+      #titleInput
+      type="text"
+      placeholder="Title"
+      [(ngModel)]="title"
+      (input)="title = titleInput.value"
+      class="title-input">
+    
+    <button class="icon-btn pin-btn" [class.pinned]="isPinned" (click)="togglePin($event)" [title]="isPinned ? 'Unpin note' : 'Pin note'" type="button">
+      <svg class="pin-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+        <path *ngIf="isPinned" d="M16 9V4l1-1V2H7v1l1 1v5L6 11v2h5v7l1 1 1-1v-7h5v-2l-2-2z"/>
+        <path *ngIf="!isPinned" d="M17 11l-2-2V4h1V2H7v2h1v5L6 11v2h5v7l1 1 1-1v-7h5v-2zm-2.5 0h-5V4h5v7z"/>
+      </svg>
+    </button>
+  </div>
+  <div class="content-row">
+    <textarea
+      #descInput
+      placeholder="Take a note..."
+      [(ngModel)]="description"
+      (input)="description = descInput.value"
+      class="content-input"
+      rows="2"></textarea>
+  </div>
+
+  <!-- Selected Labels Chips Row -->
+  <div class="note-input-chips" *ngIf="selectedLabels && selectedLabels.length > 0">
+    <div class="chip" *ngFor="let l of selectedLabels" (click)="$event.stopPropagation()">
+      <span class="chip-text">{{ l.name }}</span>
+      <span class="material-icons-outlined chip-close" (click)="removeLabelFromNewNote(l.id, $event)">close</span>
+    </div>
+  </div>
+
+  <div class="toolbar-row">
+    <div class="toolbar-icons">
+      <button class="icon-btn" title="Formatting options" type="button">
+        <span class="material-icons-outlined">text_format</span>
+      </button>
+
+      <div class="color-picker-wrapper">
+        <button class="icon-btn" (click)="toggleColorPicker($event)" title="Background options" type="button">
+          <span class="material-icons-outlined">palette</span>
+        </button>
+
+        <div class="color-palette-popup" *ngIf="showColorPicker" (click)="$event.stopPropagation()">
+          <div 
+            *ngFor="let c of colors" 
+            class="color-dot" 
+            [style.background-color]="c"
+            [class.selected]="c === color"
+            (click)="selectColor(c, $event)">
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" title="Remind me" type="button">
+        <span class="material-icons-outlined">notifications_none</span>
+      </button>
+      <button class="icon-btn" title="Collaborator" type="button">
+        <span class="material-icons-outlined">person_add</span>
+      </button>
+      <button class="icon-btn" title="Add image" type="button">
+        <span class="material-icons-outlined">image</span>
+      </button>
+      <button class="icon-btn" (click)="toggleArchive($event)" [class.active-icon]="isArchived" title="Archive" type="button">
+        <span class="material-icons-outlined">archive</span>
+      </button>
+
+      <!-- More Menu (3 dots) -->
+      <div class="more-menu-wrapper">
+        <button class="icon-btn" (click)="toggleMoreMenu($event)" title="More" type="button">
+          <span class="material-icons-outlined">more_vert</span>
+        </button>
+
+        <div 
+          class="more-menu-popup" 
+          [class.labels-mode]="showLabelsDropdown"
+          *ngIf="showMoreMenu" 
+          (click)="$event.stopPropagation()">
+
+          <ng-container *ngIf="!showLabelsDropdown">
+            <div class="more-menu-item" (click)="deleteNoteDraft($event)">
+              Delete note
+            </div>
+
+            <div class="more-menu-item" (click)="toggleLabelsDropdown($event)">
+              Add label
+            </div>
+          </ng-container>
+
+          <!-- Label Note View in Note Input -->
+          <div class="label-note-container" *ngIf="showLabelsDropdown">
+            <div class="labels-popup-header">Label note</div>
+
+            <div class="labels-popup-input-wrapper">
+              <input 
+                type="text" 
+                #inputLabelSearch
+                class="labels-search-input" 
+                placeholder="Enter label name" 
+                [(ngModel)]="labelSearchText" 
+                (keyup.enter)="onCreateNewLabel(labelSearchText.trim(), $event)"
+                (click)="$event.stopPropagation()">
+              <span class="material-icons-outlined labels-search-icon">search</span>
+            </div>
+
+            <div class="labels-popup-scroll">
+              <div class="labels-popup-no-labels" *ngIf="getFilteredLabels(allLabels).length === 0 && !labelSearchText.trim()">
+                No labels created yet.
+              </div>
+
+              <label class="label-checkbox-row" *ngFor="let l of getFilteredLabels(allLabels)">
+                <input 
+                  type="checkbox" 
+                  [checked]="isLabelSelectedForNewNote(l.id)" 
+                  (change)="toggleLabelForNewNote(l, $event)">
+                <span class="checkbox-label-name">{{ l.name }}</span>
+              </label>
+            </div>
+
+            <!-- Create "search" option -->
+            <div 
+              class="create-label-option" 
+              *ngIf="labelSearchText.trim()"
+              (click)="onCreateNewLabel(labelSearchText.trim(), $event)">
+              <span class="material-icons-outlined create-plus-icon">add</span>
+              <span class="create-label-text">Create "<strong>{{ labelSearchText.trim() }}</strong>"</span>
+            </div>
+
+            <!-- Create label option when empty -->
+            <div 
+              class="create-label-option default-create" 
+              *ngIf="!labelSearchText.trim()"
+              (click)="inputLabelSearch.focus(); $event.stopPropagation()">
+              <span class="material-icons-outlined create-plus-icon">add</span>
+              <span class="create-label-text">Create new label</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <button class="icon-btn" title="Undo" type="button">
+        <span class="material-icons-outlined">undo</span>
+      </button>
+      <button class="icon-btn" title="Redo" type="button">
+        <span class="material-icons-outlined">redo</span>
+      </button>
+    </div>
+
+    <button class="close-btn" (click)="close($event)" type="button">
+      Close
+    </button>
+  </div>
+</div>
+
+
+

@@ -1,0 +1,118 @@
+.sidebar {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 280px;
+  height: calc(100vh - 64px);
+  background: #ffffff;
+  padding-top: 8px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+  user-select: none;
+  z-index: 900;
+}
+
+.sidebar.collapsed {
+  width: 48px !important;
+}
+
+.item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  color: #202124;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0 22px 22px 0;
+  margin-bottom: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.icon-container {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.15s ease;
+}
+
+.item .label {
+  margin-left: 14px;
+  white-space: nowrap;
+  font-family: 'Roboto', 'Google Sans', sans-serif;
+  color: #202124;
+}
+
+.material-icons-outlined {
+  font-size: 20px;
+  color: #5f6368;
+}
+
+.sidebar:not(.collapsed) .item:hover {
+  background: #f1f3f4;
+}
+
+.sidebar:not(.collapsed) .item.active {
+  background: #feefc3;
+}
+
+.sidebar:not(.collapsed) .item.active .material-icons-outlined {
+  color: #202124;
+}
+
+.sidebar.collapsed .item {
+  width: 48px !important;
+  padding-left: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  justify-content: center !important;
+}
+
+.sidebar.collapsed .label {
+  display: none !important;
+}
+
+.sidebar.collapsed .item:hover .icon-container {
+  background: #f1f3f4;
+}
+
+.sidebar.collapsed .item.active .icon-container {
+  background: #feefc3;
+}
+
+.sidebar.collapsed .item.active .material-icons-outlined {
+  color: #202124;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 48px !important;
+    z-index: 900 !important;
+    box-shadow: none !important;
+  }
+
+  .sidebar .label {
+    display: none !important;
+  }
+
+  .sidebar .item {
+    width: 48px !important;
+    padding-left: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    justify-content: center !important;
+  }
+
+  .sidebar .item.active {
+    background: transparent !important;
+  }
+
+  .sidebar .item.active .icon-container {
+    background: #feefc3 !important;
+  }
+}

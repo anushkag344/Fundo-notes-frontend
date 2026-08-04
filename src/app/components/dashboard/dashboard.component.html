@@ -1,0 +1,481 @@
+<app-navbar
+  [pageTitle]="navbarTitle"
+  [isGridView]="isGridView"
+  (menuClick)="toggleSidebar($event)"
+  (searchChange)="onSearchChange($event)"
+  (viewToggle)="onViewToggle($event)"
+  (refreshClick)="onRefresh()">
+</app-navbar>
+
+<div class="dashboard-layout">
+
+  <div class="sidebar-overlay-backdrop" *ngIf="sidebarOpen" (click)="toggleSidebar(false)"></div>
+
+  <app-sidebar
+    [collapsed]="!sidebarOpen"
+    [labels]="labels"
+    [selected]="currentPage"
+    (menuChange)="changePage($event)">
+  </app-sidebar>
+
+  <main class="main-content" [class.collapsed-sidebar]="!sidebarOpen">
+
+    <app-note-input
+      *ngIf="currentPage === 'Notes' || currentPage.startsWith('label:')"
+      [allLabels]="labels"
+      (createLabelEvent)="createLabelFromInput($event)"
+      (createNote)="onNoteCreated($event)">
+    </app-note-input>
+
+
+    <div class="notes-content-wrapper" [class.list-view-wrapper]="!isGridView">
+
+      <!-- PINNED NOTES SECTION -->
+      <div class="notes-section" *ngIf="pinnedNotes.length > 0">
+        <div class="section-label">PINNED</div>
+
+        <app-notes
+          [notes]="pinnedNotes"
+          [searchText]="searchText"
+          [isGridView]="isGridView"
+          [currentPage]="currentPage"
+          [allLabels]="labels"
+          (deleteNote)="onNoteDeleted($event)"
+          (updateColor)="onNoteColorUpdated($event)"
+          (togglePin)="onNotePinToggled($event)"
+          (toggleArchive)="onToggleArchive($event)"
+          (toggleReminder)="onToggleReminder($event)"
+          (setReminderEvent)="onSetReminder($event)"
+          (removeReminderEvent)="onRemoveReminder($event)"
+          (openCollaborators)="openCollaborators($event)"
+          (addLabelToNote)="addLabelToNote($event.noteId, $event.labelId)"
+          (removeLabelFromNote)="removeLabelFromNote($event.noteId, $event.labelId)"
+          (createLabelAndAddToNote)="createLabelAndAddToNote($event.noteId, $event.labelName)"
+          (editNote)="openEditPopup($event)">
+        </app-notes>
+      </div>
+
+      <!-- OTHER NOTES SECTION -->
+      <div class="notes-section" *ngIf="otherNotes.length > 0">
+        <div
+          class="section-label"
+          *ngIf="pinnedNotes.length > 0">
+          OTHERS
+        </div>
+
+        <app-notes
+          [notes]="otherNotes"
+          [searchText]="searchText"
+          [isGridView]="isGridView"
+          [currentPage]="currentPage"
+          [allLabels]="labels"
+          (deleteNote)="onNoteDeleted($event)"
+          (updateColor)="onNoteColorUpdated($event)"
+          (togglePin)="onNotePinToggled($event)"
+          (toggleArchive)="onToggleArchive($event)"
+          (toggleReminder)="onToggleReminder($event)"
+          (setReminderEvent)="onSetReminder($event)"
+          (removeReminderEvent)="onRemoveReminder($event)"
+          (restoreNote)="onRestoreNote($event)"
+          (deleteForever)="onDeleteForever($event)"
+          (openCollaborators)="openCollaborators($event)"
+          (addLabelToNote)="addLabelToNote($event.noteId, $event.labelId)"
+          (removeLabelFromNote)="removeLabelFromNote($event.noteId, $event.labelId)"
+          (createLabelAndAddToNote)="createLabelAndAddToNote($event.noteId, $event.labelName)"
+          (editNote)="openEditPopup($event)">
+        </app-notes>
+      </div>
+
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="filteredNotes.length === 0">
+
+      <span class="material-icons-outlined empty-icon">
+        {{ icon }}
+      </span>
+
+      <p class="empty-text">
+        {{ message }}
+      </p>
+
+    </div>
+
+    <div class="open-source-footer">
+      Open-source licenses
+    </div>
+
+  </main>
+
+</div>
+
+<div class="edit-overlay" *ngIf="showEditPopup" (click)="closeEditPopup()">
+
+  <div class="keep-popup" [style.background-color]="selectedNote.color || '#ffffff'" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="popup-header">
+
+      <input
+        class="popup-title"
+        [(ngModel)]="selectedNote.title"
+        placeholder="Title">
+
+      <button 
+        class="icon-btn pin-btn" 
+        [class.pinned]="selectedNote.isPinned" 
+        (click)="selectedNote.isPinned = !selectedNote.isPinned; onNotePinToggled(selectedNote.id)"
+        [title]="selectedNote.isPinned ? 'Unpin note' : 'Pin note'">
+        <svg class="pin-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path *ngIf="selectedNote.isPinned" d="M16 9V4l1-1V2H7v1l1 1v5L6 11v2h5v7l1 1 1-1v-7h5v-2l-2-2z"/>
+          <path *ngIf="!selectedNote.isPinned" d="M17 11l-2-2V4h1V2H7v2h1v5L6 11v2h5v7l1 1 1-1v-7h5v-2zm-2.5 0h-5V4h5v7z"/>
+        </svg>
+      </button>
+
+    </div>
+
+    <textarea
+      class="popup-description"
+      [(ngModel)]="selectedNote.description"
+      placeholder="Take a note...">
+    </textarea>
+
+    <!-- Combined Chips Row (Reminder, Labels, Collaborators, Edited timestamp) in Edit Popup -->
+    <div class="popup-chips-row" *ngIf="(selectedNote.reminder) || (selectedNote.labels && selectedNote.labels.length > 0) || (selectedNote.collaborators && selectedNote.collaborators.length > 0) || selectedNote.updatedAt">
+      
+      <div class="chips-left">
+        <!-- Reminder Chip -->
+        <div class="chip reminder-chip" *ngIf="selectedNote.reminder">
+          <span class="material-icons-outlined chip-icon">access_time</span>
+          <span class="chip-text">{{ formatReminderDate(selectedNote.reminder) }}</span>
+          <span class="material-icons-outlined chip-close" (click)="onRemoveReminder(selectedNote.id)" title="Delete reminder">close</span>
+        </div>
+
+        <!-- Label Chips -->
+        <div 
+          class="chip label-chip" 
+          *ngFor="let l of selectedNote.labels">
+          <span class="chip-text">{{ l.name }}</span>
+          <span class="material-icons-outlined chip-close" (click)="removeLabelFromNote(selectedNote.id, l.id)">close</span>
+        </div>
+
+        <!-- Collaborator Avatars -->
+        <div 
+          class="card-collab-avatar" 
+          *ngFor="let col of selectedNote.collaborators"
+          [title]="col.firstName ? col.firstName + ' (' + col.email + ')' : col.email"
+          (click)="openCollaborators(selectedNote)">
+          {{ col.firstName ? col.firstName.charAt(0).toUpperCase() : col.email.charAt(0).toUpperCase() }}
+        </div>
+      </div>
+
+      <span class="edited-text" *ngIf="selectedNote?.updatedAt">
+        Edited {{ formatEditedDate(selectedNote.updatedAt) }}
+      </span>
+
+    </div>
+
+    <div class="popup-footer">
+
+      <div class="footer-icons">
+
+        <button class="icon-btn" title="Remind me">
+          <span class="material-icons-outlined">notifications_none</span>
+        </button>
+
+        <button class="icon-btn" title="Collaborator" (click)="openCollaborators(selectedNote)">
+          <span class="material-icons-outlined">person_add</span>
+        </button>
+
+        <!-- Color picker inside popup -->
+        <div class="popup-color-wrapper">
+          <button class="icon-btn" (click)="showPopupColorPicker = !showPopupColorPicker; $event.stopPropagation()" title="Background options">
+            <span class="material-icons-outlined">palette</span>
+          </button>
+          <div class="popup-color-palette" *ngIf="showPopupColorPicker" (click)="$event.stopPropagation()">
+            <div 
+              *ngFor="let c of colors" 
+              class="color-dot" 
+              [style.background-color]="c"
+              [class.selected]="c === selectedNote.color"
+              (click)="selectedNote.color = c; showPopupColorPicker = false">
+            </div>
+          </div>
+        </div>
+
+        <button class="icon-btn" title="Add image">
+          <span class="material-icons-outlined">image</span>
+        </button>
+
+        <button 
+          class="icon-btn" 
+          title="Archive" 
+          (click)="selectedNote.isArchived = !selectedNote.isArchived; onToggleArchive(selectedNote.id); closeEditPopup()">
+          <span class="material-icons-outlined">archive</span>
+        </button>
+
+        <!-- Labels dropdown checkable inside popup -->
+        <div class="popup-labels-wrapper">
+          <button class="icon-btn" (click)="showPopupLabelsDropdown = !showPopupLabelsDropdown; $event.stopPropagation()" title="More">
+            <span class="material-icons-outlined">more_vert</span>
+          </button>
+          <div class="popup-labels-popup" *ngIf="showPopupLabelsDropdown" (click)="$event.stopPropagation()">
+            <div class="more-menu-item" (click)="deleteSelectedNote()">
+              Delete note
+            </div>
+            <div class="labels-popup-header">Label note</div>
+            <div class="labels-popup-input-wrapper">
+              <input 
+                type="text" 
+                #popupLabelInput
+                class="labels-search-input" 
+                placeholder="Enter label name" 
+                [(ngModel)]="popupLabelSearchText"
+                (keyup.enter)="onCreateNewLabelForSelectedNote(popupLabelSearchText.trim(), $event)"
+                (click)="$event.stopPropagation()">
+              <span class="material-icons-outlined labels-search-icon">search</span>
+            </div>
+            <div class="labels-popup-scroll">
+              <div class="labels-popup-no-labels" *ngIf="getFilteredLabelsForPopup(labels).length === 0 && !popupLabelSearchText.trim()">
+                No labels created yet.
+              </div>
+              <label class="label-checkbox-row" *ngFor="let l of getFilteredLabelsForPopup(labels)">
+                <input 
+                  type="checkbox" 
+                  [checked]="isLabelOnNote(selectedNote, l.id)" 
+                  (change)="toggleLabelOnNote(selectedNote.id, l.id, $event)">
+                <span class="checkbox-label-name">{{ l.name }}</span>
+              </label>
+            </div>
+            <div 
+              class="create-label-option" 
+              *ngIf="popupLabelSearchText.trim()"
+              (click)="onCreateNewLabelForSelectedNote(popupLabelSearchText.trim(), $event)">
+              <span class="material-icons-outlined create-plus-icon">add</span>
+              <span class="create-label-text">Create "<strong>{{ popupLabelSearchText.trim() }}</strong>"</span>
+            </div>
+            <div 
+              class="create-label-option default-create" 
+              *ngIf="!popupLabelSearchText.trim()"
+              (click)="popupLabelInput.focus(); $event.stopPropagation()">
+              <span class="material-icons-outlined create-plus-icon">add</span>
+              <span class="create-label-text">Create new label</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="icon-btn" title="Undo">
+          <span class="material-icons-outlined">undo</span>
+        </button>
+
+        <button class="icon-btn" title="Redo">
+          <span class="material-icons-outlined">redo</span>
+        </button>
+
+      </div>
+
+      <div class="footer-right">
+        <button
+          class="close-btn"
+          (click)="closeEditPopup()">
+          Close
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- EDIT LABELS MODAL -->
+<div class="labels-modal-overlay" *ngIf="showLabelsModal" (click)="closeLabelsModal()">
+  <div class="labels-modal" (click)="$event.stopPropagation()">
+    <h3 class="modal-title">Edit labels</h3>
+    
+    <!-- Create New Label -->
+    <div class="label-row create-row">
+      <span 
+        class="material-icons-outlined icon-btn-col" 
+        (mousedown)="$event.preventDefault()"
+        (click)="onCreateIconClick()" 
+        [title]="newLabelName.trim() ? 'Create label' : (createLabelFocused ? 'Cancel' : 'Create label')">
+        {{ newLabelName.trim() ? 'check' : (createLabelFocused ? 'close' : 'add') }}
+      </span>
+      <input 
+        type="text" 
+        [(ngModel)]="newLabelName" 
+        placeholder="Create new label"
+        (focus)="createLabelFocused = true"
+        (blur)="createLabelFocused = false"
+        (keyup.enter)="createLabel()">
+      <span 
+        class="material-icons-outlined icon-btn-col check-green" 
+        *ngIf="newLabelName.trim()"
+        (mousedown)="$event.preventDefault()"
+        (click)="createLabel()" 
+        title="Create label">
+        check
+      </span>
+    </div>
+
+    <!-- Feedback messages -->
+    <div class="label-feedback success" *ngIf="labelSuccess">
+      <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">check_circle</span>
+      {{ labelSuccess }}
+    </div>
+    <div class="label-feedback error" *ngIf="labelError">
+      <span class="material-icons-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">error_outline</span>
+      {{ labelError }}
+    </div>
+
+    <!-- Labels List -->
+    <div class="labels-list-scroll">
+      <div class="label-row" *ngFor="let l of labels">
+        <!-- Left Icon: Delete icon (trash can) on hover or when editing -->
+        <span 
+          *ngIf="editingLabelId === l.id"
+          class="material-icons-outlined icon-btn-col" 
+          (click)="confirmDeleteLabel(l, $event)" 
+          title="Delete label">
+          delete
+        </span>
+        <span 
+          *ngIf="editingLabelId !== l.id"
+          class="material-icons-outlined icon-btn-col hover-delete-icon" 
+          (click)="confirmDeleteLabel(l, $event)"
+          title="Delete label">
+          <span class="icon-tag">label</span>
+          <span class="icon-del">delete</span>
+        </span>
+
+        <!-- Label Name / Edit Input -->
+        <div class="label-middle">
+          <input 
+            *ngIf="editingLabelId === l.id" 
+            class="label-edit-input" 
+            [(ngModel)]="editingLabelName" 
+            (keyup.enter)="saveLabelEdit(l.id)"
+            autofocus>
+          <span 
+            *ngIf="editingLabelId !== l.id" 
+            class="label-text-val"
+            (click)="startEditingLabel(l)">
+            {{ l.name }}
+          </span>
+        </div>
+
+        <!-- Right Icon: Checkmark if editing, Pencil if not -->
+        <span 
+          *ngIf="editingLabelId !== l.id"
+          class="material-icons-outlined icon-btn-col" 
+          (click)="startEditingLabel(l)" 
+          title="Rename label">
+          edit
+        </span>
+        <span 
+          *ngIf="editingLabelId === l.id"
+          class="material-icons-outlined icon-btn-col check-green" 
+          (click)="saveLabelEdit(l.id)" 
+          title="Save label">
+          check
+        </span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="labels-footer">
+      <button class="done-btn" (click)="closeLabelsModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE LABEL CONFIRMATION DIALOG -->
+<div class="delete-confirm-overlay" *ngIf="showDeleteLabelConfirm" (click)="cancelDeleteLabel()">
+  <div class="delete-confirm-modal" (click)="$event.stopPropagation()">
+    <div class="confirm-content">
+      We'll delete this label and remove it from all of your Keep notes. Your notes won't be deleted.
+    </div>
+    <div class="confirm-footer">
+      <button class="confirm-btn-cancel" (click)="cancelDeleteLabel()">Cancel</button>
+      <button class="confirm-btn-delete" (click)="executeDeleteLabel()">Delete</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- COLLABORATORS MODAL -->
+<div class="collaborators-modal-overlay" *ngIf="showCollaboratorsModal" (click)="closeCollaborators()">
+  <div class="collaborators-modal" (click)="$event.stopPropagation()">
+    <h3 class="modal-title-collab">Collaborators</h3>
+    
+    <div class="collab-content">
+      <!-- Owner Info -->
+      <div class="collab-row owner-row">
+        <div class="collab-avatar owner-avatar">
+          {{ currentUserProfile?.firstName?.charAt(0)?.toUpperCase() || 'A' }}
+        </div>
+        <div class="collab-details">
+          <div class="collab-name">
+            {{ currentUserProfile?.firstName }} {{ currentUserProfile?.lastName || '' }} <span class="owner-tag">(Owner)</span>
+          </div>
+          <div class="collab-email">
+            {{ currentUserProfile?.email }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Collaborators List -->
+      <div class="collab-list">
+        <div class="collab-row" *ngFor="let col of collaboratorsList">
+          <div class="collab-avatar">
+            {{ col.firstName ? col.firstName.charAt(0).toUpperCase() : col.email.charAt(0).toUpperCase() }}
+          </div>
+          <div class="collab-details">
+            <div class="collab-name" *ngIf="col.firstName">
+              {{ col.firstName }} {{ col.lastName }}
+            </div>
+            <div class="collab-email">
+              {{ col.email }}
+            </div>
+          </div>
+          <span 
+            class="material-icons-outlined remove-collab-btn" 
+            (click)="removeCollaborator(col.email, $event)" 
+            [title]="'Delete ' + col.email">
+            close
+          </span>
+        </div>
+      </div>
+
+      <!-- Add Collaborator Input -->
+      <div class="collab-row add-collab-row">
+        <div class="collab-avatar add-avatar">
+          <span class="material-icons-outlined">person_add</span>
+        </div>
+        <div class="collab-details add-details">
+          <input 
+            type="email" 
+            class="collab-input" 
+            placeholder="Person or email to share with" 
+            [(ngModel)]="newCollaboratorEmail"
+            (keyup.enter)="addCollaborator()">
+        </div>
+        <span 
+          class="material-icons-outlined add-check-btn" 
+          *ngIf="newCollaboratorEmail"
+          (click)="addCollaborator()"
+          title="Add collaborator">
+          check
+        </span>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="collab-footer">
+      <button class="collab-btn-cancel" (click)="closeCollaborators()">Cancel</button>
+      <button class="collab-btn-save" (click)="addCollaborator(); closeCollaborators()">Save</button>
+    </div>
+  </div>
+</div>

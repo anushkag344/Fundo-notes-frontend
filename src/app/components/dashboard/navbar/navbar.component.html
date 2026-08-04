@@ -1,0 +1,132 @@
+<header class="navbar" [class.mobile-search-active]="isMobileSearchOpen">
+
+  <!-- STANDARD NAVBAR CONTENT (Shown when mobile search is inactive) -->
+  <ng-container *ngIf="!isMobileSearchOpen">
+    <div class="left">
+      <button class="icon-btn menu-btn" (click)="menuToggle()" title="Main menu">
+        <span class="material-icons-outlined">menu</span>
+      </button>
+
+      <div class="brand">
+        <svg class="keep-bulb-svg" viewBox="0 0 40 40" width="40" height="40" fill="none">
+          <path d="M20 4C13.37 4 8 9.37 8 16c0 4.14 2.11 7.79 5.31 9.94.7.47 1.13 1.25 1.13 2.09V30c0 .55.45 1 1 1h9c.55 0 1-.45 1-1v-1.97c0-.84.43-1.62 1.13-2.09C29.89 23.79 32 20.14 32 16c0-6.63-5.37-12-12-12z" fill="#FFBB00"/>
+          <path d="M15 33h10v1.5C25 35.33 24.33 36 23.5 36h-7C15.67 36 15 35.33 15 34.5V33z" fill="#9E9E9E"/>
+          <path d="M16.5 37h7v.5c0 .55-.45 1-1 1h-5c-.55 0-1-.45-1-1V37z" fill="#757575"/>
+          <path d="M20 8c-4.42 0-8 3.58-8 8 0 .55.45 1 1 1s1-.45 1-1c0-3.31 2.69-6 6-6 .55 0 1-.45 1-1s-.45-1-1-1z" fill="#FFFFFF" opacity="0.95"/>
+        </svg>
+
+        <span class="title brand-colorful">
+          <span class="c-blue">F</span><span class="c-red">u</span><span class="c-yellow">n</span><span class="c-blue">d</span><span class="c-green">o</span><span class="c-red">o</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- DESKTOP SEARCH -->
+    <div class="search desktop-search">
+      <button class="icon-btn search-btn" type="button">
+        <span class="material-icons-outlined">search</span>
+      </button>
+
+      <input
+        #desktopSearchInput
+        type="text"
+        placeholder="Search"
+        [value]="searchText"
+        (input)="onSearchInput($event)">
+
+      <button class="icon-btn clear-btn" *ngIf="searchText" (click)="clearSearch(desktopSearchInput)" type="button">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="right">
+      <!-- MOBILE SEARCH ICON BUTTON -->
+      <button class="icon-btn mobile-search-btn" (click)="openMobileSearch()" title="Search">
+        <span class="material-icons-outlined">search</span>
+      </button>
+
+      <button class="icon-btn" (click)="refresh()" title="Refresh">
+        <span class="material-icons-outlined" [class.spin]="isSpinning">refresh</span>
+      </button>
+
+      <button class="icon-btn settings-btn">
+        <span class="material-icons-outlined">settings</span>
+      </button>
+
+      <button class="icon-btn apps-btn">
+        <span class="material-icons-outlined">apps</span>
+      </button>
+
+      <!-- PROFILE -->
+      <div class="profile-container">
+        <div
+          class="profile"
+          title="Google Account"
+          (click)="toggleProfileMenu($event)">
+          {{ user.firstName?.charAt(0) || 'A' }}
+        </div>
+
+        <!-- PROFILE POPUP -->
+        <div
+          class="profile-popup"
+          *ngIf="isProfileOpen"
+          (click)="$event.stopPropagation()">
+          <div class="popup-profile">
+            <div class="big-profile">
+              {{ user.firstName?.charAt(0) || 'A' }}
+            </div>
+            <h2>
+              Hi, {{ user.firstName || user.name || 'User' }}!
+            </h2>
+          </div>
+
+          <div class="manage-btn">
+            {{ user.email }}
+          </div>
+
+          <div class="popup-divider"></div>
+
+          <div class="popup-buttons">
+            <button
+              type="button"
+              (click)="addAccount()">
+              <span class="material-icons-outlined">person_add</span>
+              Add account
+            </button>
+
+            <button
+              type="button"
+              (click)="logout()">
+              <span class="material-icons-outlined">logout</span>
+              Sign out
+            </button>
+          </div>
+
+          <div class="footer-links">
+            <span>Privacy Policy</span>
+            <span>•</span>
+            <span>Terms of Service</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- MOBILE SEARCH OVERLAY HEADER (Shown when mobile search is active) -->
+  <div class="mobile-search-bar" *ngIf="isMobileSearchOpen">
+    <button class="icon-btn" (click)="closeMobileSearch()" title="Back">
+      <span class="material-icons-outlined">arrow_back</span>
+    </button>
+    <input
+      #mobileSearchInput
+      type="text"
+      placeholder="Search your notes"
+      [value]="searchText"
+      (input)="onSearchInput($event)"
+      autofocus>
+    <button class="icon-btn" *ngIf="searchText" (click)="clearSearch(mobileSearchInput)" title="Clear search">
+      <span class="material-icons-outlined">close</span>
+    </button>
+  </div>
+
+</header>

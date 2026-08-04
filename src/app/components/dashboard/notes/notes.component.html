@@ -1,0 +1,304 @@
+<div class="notes-container" [class.list-view]="!isGridView">
+
+  <div class="notes-column" *ngFor="let col of noteColumns">
+    <div
+      class="note-card"
+      *ngFor="let note of col"
+      [class.selected]="isNoteSelected(note.id)"
+      [class.has-open-menu]="hasOpenMenu(note.id)"
+      [style.background-color]="note.color || '#ffffff'"
+      (click)="openNote(note)">
+
+      <!-- Checkmark Selection Icon (Top-Left) -->
+      <div 
+        class="card-select-btn" 
+        [class.selected]="isNoteSelected(note.id)"
+        (click)="toggleSelectNote(note.id, $event)" 
+        [title]="isNoteSelected(note.id) ? 'Deselect note' : 'Select note'">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="#ffffff">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+      </div>
+      <button
+        class="pin-btn"
+        [class.pinned]="note.isPinned"
+        (click)="onTogglePin(note.id, $event)"
+        [title]="note.isPinned ? 'Unpin note' : 'Pin note'"
+        type="button"
+        *ngIf="currentPage !== 'Trash'">
+
+        <svg class="pin-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path *ngIf="note.isPinned" d="M16 9V4l1-1V2H7v1l1 1v5L6 11v2h5v7l1 1 1-1v-7h5v-2l-2-2z"/>
+          <path *ngIf="!note.isPinned" d="M17 11l-2-2V4h1V2H7v2h1v5L6 11v2h5v7l1 1 1-1v-7h5v-2zm-2.5 0h-5V4h5v7z"/>
+        </svg>
+
+      </button>
+
+      <h3 class="card-title" *ngIf="note.title" [innerHTML]="highlight(note.title)">
+      </h3>
+
+      <p class="card-description" *ngIf="note.description" [innerHTML]="highlight(note.description)">
+      </p>
+
+      <div class="note-chips" *ngIf="note.labels && note.labels.length > 0">
+        <div 
+          class="chip" 
+          *ngFor="let l of note.labels"
+          (click)="$event.stopPropagation()">
+          <span class="chip-text" [innerHTML]="highlight(l.name)"></span>
+          <span class="material-icons-outlined chip-close" (click)="onRemoveLabel(note.id, l.id, $event)">close</span>
+        </div>
+      </div>
+
+      <div class="note-chips" *ngIf="note.reminder">
+        <div class="chip reminder-chip" (click)="$event.stopPropagation()">
+          <span class="material-icons-outlined chip-icon">access_time</span>
+          <span class="chip-text">{{ formatReminderDate(note.reminder) }}</span>
+          <span class="material-icons-outlined chip-close" (click)="onRemoveReminder(note.id, $event)" title="Delete reminder">close</span>
+        </div>
+      </div>
+      <div class="note-card-collaborators" *ngIf="note.collaborators && note.collaborators.length > 0">
+        <div 
+          class="card-collab-avatar" 
+          *ngFor="let col of note.collaborators"
+          [title]="col.firstName ? col.firstName + ' (' + col.email + ')' : col.email"
+          (click)="$event.stopPropagation()">
+          {{ col.firstName ? col.firstName.charAt(0).toUpperCase() : col.email.charAt(0).toUpperCase() }}
+        </div>
+      </div>
+
+    
+      <div class="actions" *ngIf="currentPage === 'Trash'">
+
+        <span
+          class="material-icons-outlined"
+          title="Delete forever"
+          (click)="onDeleteForever(note.id, $event)">
+          delete_forever
+        </span>
+
+        <span
+          class="material-icons-outlined"
+          title="Restore"
+          (click)="onRestore(note.id, $event)">
+          restore_from_trash
+        </span>
+
+      </div>
+      <div class="actions" *ngIf="currentPage !== 'Trash'">
+
+        <div class="card-color-wrapper">
+          <span
+            class="material-icons-outlined"
+            title="Background options"
+            (click)="toggleColorPicker(note.id, $event)">
+            palette
+          </span>
+
+          <div
+            class="card-color-popup"
+            *ngIf="activeColorPickerIndex === note.id"
+            (click)="$event.stopPropagation()">
+            <div
+              *ngFor="let c of colors"
+              class="color-dot"
+              [style.background-color]="c"
+              [class.selected]="c === (note.color || '#ffffff')"
+              (click)="changeNoteColor(note.id, c, $event)">
+            </div>
+          </div>
+        </div>
+        <div class="card-reminder-wrapper">
+          <span
+            class="material-icons-outlined"
+            [class.active-icon]="note.reminder"
+            title="Remind me"
+            (click)="toggleReminderMenu(note.id, $event)">
+            {{ note.reminder ? 'notifications' : 'notifications_none' }}
+          </span>
+
+          <!-- Google Keep Reminder Popover Menu -->
+          <div 
+            class="reminder-popover" 
+            *ngIf="activeReminderIndex === note.id"
+            (click)="$event.stopPropagation()">
+
+            <!-- PRESETS VIEW (Image 2) -->
+            <div *ngIf="reminderViewMode === 'PRESETS'" class="reminder-presets-view">
+              <div class="reminder-header-title">Remind me later</div>
+              <div class="reminder-header-subtitle">Your reminders trigger email notifications</div>
+
+              <div class="reminder-row-item" (click)="setQuickReminder(note.id, 'LATER_TODAY', $event)">
+                <span class="row-label">Later today</span>
+                <span class="row-time">8:00 PM</span>
+              </div>
+
+              <div class="reminder-row-item" (click)="setQuickReminder(note.id, 'TOMORROW', $event)">
+                <span class="row-label">Tomorrow</span>
+                <span class="row-time">8:00 AM</span>
+              </div>
+
+              <div class="reminder-row-item" (click)="setQuickReminder(note.id, 'NEXT_WEEK', $event)">
+                <span class="row-label">Next week</span>
+                <span class="row-time">Mon, 8:00 AM</span>
+              </div>
+
+              <div class="pick-custom-row" (click)="reminderViewMode = 'PICK_CUSTOM'; $event.stopPropagation()">
+                <span class="material-icons-outlined option-clock-icon">schedule</span>
+                <span class="pick-custom-label">Pick date & time</span>
+              </div>
+            </div>
+
+            <!-- PICK CUSTOM DATE & TIME VIEW (Image 3) -->
+            <div *ngIf="reminderViewMode === 'PICK_CUSTOM'" class="reminder-custom-view">
+              <div class="custom-header-bar" (click)="reminderViewMode = 'PRESETS'; $event.stopPropagation()">
+                <span class="material-icons-outlined back-arrow">arrow_back</span>
+                <span class="custom-title-text">Pick date & time</span>
+              </div>
+
+              <div class="custom-form-field">
+                <input 
+                  type="date" 
+                  [(ngModel)]="customReminderDate" 
+                  class="custom-select-field">
+              </div>
+
+              <div class="custom-form-field">
+                <input 
+                  type="time" 
+                  [(ngModel)]="customReminderTime" 
+                  class="custom-select-field">
+              </div>
+
+              <div class="custom-form-field">
+                <select [(ngModel)]="customReminderRepeat" class="custom-select-field">
+                  <option value="NONE">Does not repeat</option>
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                </select>
+              </div>
+
+              <div class="custom-footer-actions">
+                <button class="save-reminder-btn" (click)="saveCustomReminder(note.id, $event)">Save</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Collaborator -->
+        <span
+          class="material-icons-outlined"
+          title="Collaborator"
+          (click)="onOpenCollaborators(note, $event)">
+          person_add
+        </span>
+
+        <!-- Image -->
+        <span
+          class="material-icons-outlined"
+          title="Add image">
+          image
+        </span>
+
+        <!-- Archive / Unarchive -->
+        <span
+          class="material-icons-outlined"
+          title="Unarchive"
+          *ngIf="note.isArchived"
+          (click)="onToggleArchive(note.id, $event)">
+          unarchive
+        </span>
+
+        <span
+          class="material-icons-outlined"
+          title="Archive"
+          *ngIf="!note.isArchived"
+          (click)="onToggleArchive(note.id, $event)">
+          archive
+        </span>
+
+        <!-- More Menu (Vertical 3 dots) -->
+        <div class="card-more-wrapper">
+          <span
+            class="material-icons-outlined"
+            title="More"
+            (click)="toggleMoreMenu(note.id, $event)">
+            more_vert
+          </span>
+
+          <div
+            class="card-more-popup"
+            [class.labels-mode]="activeLabelsDropdownIndex === note.id"
+            *ngIf="activeMoreMenuIndex === note.id"
+            (click)="$event.stopPropagation()">
+            
+            <ng-container *ngIf="activeLabelsDropdownIndex !== note.id">
+              <div class="more-menu-item" (click)="onDelete(note.id, $event); activeMoreMenuIndex = null">
+                Delete note
+              </div>
+              
+              <div class="more-menu-item" (click)="toggleLabelsDropdown(note.id, $event)">
+                Add label
+              </div>
+            </ng-container>
+
+            <!-- Google Keep Label Note View -->
+            <div class="label-note-container" *ngIf="activeLabelsDropdownIndex === note.id">
+              <div class="labels-popup-header">Label note</div>
+              
+              <div class="labels-popup-input-wrapper">
+                <input 
+                  type="text" 
+                  #cardLabelInput
+                  class="labels-search-input" 
+                  placeholder="Enter label name" 
+                  [(ngModel)]="labelSearchText" 
+                  (keyup.enter)="onCreateNewLabelForNote(note.id, labelSearchText.trim(), $event)"
+                  (click)="$event.stopPropagation()">
+                <span class="material-icons-outlined labels-search-icon">search</span>
+              </div>
+
+              <div class="labels-popup-scroll">
+                <div class="labels-popup-no-labels" *ngIf="getFilteredLabels(allLabels).length === 0 && !labelSearchText.trim()">
+                  No labels created yet.
+                </div>
+
+                <label class="label-checkbox-row" *ngFor="let l of getFilteredLabels(allLabels)">
+                  <input 
+                    type="checkbox" 
+                    [checked]="isLabelOnNote(note, l.id)" 
+                    (change)="onToggleLabel(note.id, l.id, $event)">
+                  <span class="checkbox-label-name">{{ l.name }}</span>
+                </label>
+              </div>
+
+              <!-- Create "search" option -->
+              <div 
+                class="create-label-option" 
+                *ngIf="labelSearchText.trim()"
+                (click)="onCreateNewLabelForNote(note.id, labelSearchText.trim(), $event)">
+                <span class="material-icons-outlined create-plus-icon">add</span>
+                <span class="create-label-text">Create "<strong>{{ labelSearchText.trim() }}</strong>"</span>
+              </div>
+
+              <!-- Create label option when empty -->
+              <div 
+                class="create-label-option default-create" 
+                *ngIf="!labelSearchText.trim()"
+                (click)="cardLabelInput.focus(); $event.stopPropagation()">
+                <span class="material-icons-outlined create-plus-icon">add</span>
+                <span class="create-label-text">Create new label</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+    </div>
+
+    </div>
+  </div>
+
+</div>

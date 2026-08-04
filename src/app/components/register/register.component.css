@@ -1,0 +1,299 @@
+/* ===== Top Banner Popup ===== */
+.top-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-width: 320px;
+  max-width: 600px;
+  width: auto;
+  padding: 14px 20px;
+  border-radius: 0 0 8px 8px;
+  font-size: 15px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+.error-banner {
+  background-color: #e53935;
+  color: #ffffff;
+}
+
+.success-banner {
+  background-color: #43a047;
+  color: #ffffff;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+@keyframes slideDown {
+  from { top: -60px; opacity: 0; }
+  to   { top: 0;    opacity: 1; }
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f0f4f9;
+  padding: 20px;
+}
+
+.register-box {
+  display: flex;
+  width: 100%;
+  max-width: 900px;
+  background: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 48px 40px;
+  box-shadow: 0 1px 3px rgba(60, 64, 67, .3);
+  gap: 60px;
+}
+
+.register-left {
+  flex: 1.7;
+}
+
+.register-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.logo {
+  font-size: 38px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.l-blue {
+  color: #4285F4;
+}
+
+.l-red {
+  color: #EA4335;
+}
+
+.l-yellow {
+  color: #FBBC05;
+}
+
+.l-green {
+  color: #34A853;
+}
+
+h2 {
+  font-size: 32px;
+  font-weight: 400;
+  color: #202124;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #5f6368;
+  margin: 8px 0 30px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.row .input-group {
+  flex: 1;
+}
+
+.input-group {
+  margin-bottom: 8px;
+  position: relative;
+  min-height: 74px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  height: 52px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border: 2px solid #1a73e8;
+}
+
+.error-msg {
+  color: #d93025;
+  font-size: 11px;
+  margin-top: 2px;
+  padding-left: 2px;
+  line-height: 1.2;
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 18px;
+}
+
+.checkbox-group input {
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-group label {
+  font-size: 14px;
+}
+
+.global-error {
+  color: #d93025;
+  margin-bottom: 15px;
+  font-size: 13px;
+  background-color: #fce8e6;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.auth-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.create-link {
+  color: #1a73e8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-submit {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 100px;
+  height: 40px;
+  cursor: pointer;
+}
+
+.btn-submit:hover {
+  background: #1557b0;
+}
+
+/* RIGHT SIDE IMAGE */
+
+.shield-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.shield-icon img {
+  width: 270px;
+  height: auto;
+}
+
+.desc-text {
+  margin-top: 20px;
+  width: 220px;
+  font-size: 16px;
+  color: #5f6368;
+  line-height: 24px;
+}
+
+@media (max-width:768px) {
+  .auth-container {
+    padding: 12px;
+  }
+
+  .register-box {
+    flex-direction: column;
+    max-width: 440px;
+    padding: 32px 24px;
+    gap: 20px;
+  }
+
+  .register-right {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .register-box {
+    padding: 24px 16px;
+  }
+
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .top-banner {
+    min-width: unset;
+    width: calc(100vw - 24px);
+    max-width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .logo {
+    font-size: 30px;
+  }
+
+  .auth-footer {
+    flex-direction: column-reverse;
+    gap: 16px;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .btn-submit {
+    width: 100%;
+  }
+}
