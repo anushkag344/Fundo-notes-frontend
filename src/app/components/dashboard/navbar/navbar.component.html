@@ -49,6 +49,10 @@
         <span class="material-icons-outlined" [class.spin]="isSpinning">refresh</span>
       </button>
 
+      <button class="icon-btn view-toggle-btn" (click)="toggleView()" [title]="isGridView ? 'List view' : 'Grid view'">
+        <span class="material-icons-outlined">{{ isGridView ? 'view_agenda' : 'grid_view' }}</span>
+      </button>
+
       <button class="icon-btn settings-btn">
         <span class="material-icons-outlined">settings</span>
       </button>
