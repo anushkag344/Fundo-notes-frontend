@@ -552,6 +552,10 @@
         display: flex !important;
     }
 
+    .view-toggle-btn {
+        display: none !important;
+    }
+
     .apps-btn,
     .settings-btn {
         display: flex !important;
