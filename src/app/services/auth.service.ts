@@ -8,7 +8,7 @@ import { map, catchError } from 'rxjs/operators';
 })
 export class AuthService {
 
-  private apiUrl = 'http://localhost:8080/api/users';
+  private apiUrl = 'https://fundo-notes-backend.onrender.com/api/users';
 
   constructor(private http: HttpClient) {}
   register(request: any): Observable<any> {

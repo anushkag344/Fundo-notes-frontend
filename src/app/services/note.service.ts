@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class NoteService {
 
-  private apiUrl = 'http://localhost:8080/api/notes';
+  private apiUrl = 'https://fundo-notes-backend.onrender.com/api/notes';
 
   constructor(private http: HttpClient) {}
 

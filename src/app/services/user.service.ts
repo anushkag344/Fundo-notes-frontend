@@ -6,7 +6,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 })
 export class UserService {
 
-  private baseUrl = 'http://localhost:8080/api/users';
+  private baseUrl = 'https://fundo-notes-backend.onrender.com/api/users';
 
   constructor(private http: HttpClient) {}
 
