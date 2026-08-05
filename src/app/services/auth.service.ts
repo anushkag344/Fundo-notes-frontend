@@ -19,7 +19,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'Registration failed';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha. Kripya Backend start karein!';
+          message = 'Backend Server wake-up ho raha hai. Kripya 10 second baad firse Submit par click karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
