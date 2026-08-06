@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, timer } from 'rxjs';
 import { map, catchError, retryWhen, mergeMap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
-  private apiUrl = 'https://fundo-notes-backend.onrender.com/api/users';
+  private apiUrl = `${environment.apiUrl}/api/users`;
 
   constructor(private http: HttpClient) {}
 

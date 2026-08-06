@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NoteService {
 
-  private apiUrl = 'https://fundo-notes-backend.onrender.com/api/notes';
+  private apiUrl = `${environment.apiUrl}/api/notes`;
 
   constructor(private http: HttpClient) {}
 
@@ -70,7 +71,7 @@ getPinnedNotes(): Observable<any> {
   return this.http.get(`${this.apiUrl}/pinned`, this.getHeaders());
 }
 
-  private labelUrl = 'https://fundo-notes-backend.onrender.com/api/labels';
+  private labelUrl = `${environment.apiUrl}/api/labels`;
 
 getLabels(): Observable<any> {
   return this.http.get(this.labelUrl, this.getHeaders());
