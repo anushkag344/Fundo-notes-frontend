@@ -30,6 +30,7 @@ export class RegisterComponent {
   errorMessage = '';
   successMessage = '';
   submitted = false;
+  isLoading = false;
 
   constructor(
     private authService: AuthService,
@@ -58,15 +59,19 @@ export class RegisterComponent {
       password: this.user.password
     };
 
+    this.isLoading = true;
+
     this.authService.register(regRequest).subscribe({
 
       next: (res) => {
+        this.isLoading = false;
         this.successMessage = 'Registration Successful!';
         setTimeout(() => { this.successMessage = ''; }, 3000);
         setTimeout(() => { this.router.navigate(['/login']); }, 1500);
       },
 
       error: (err) => {
+        this.isLoading = false;
         const rawMsg: string = (err.error?.message || err.message || 'Registration failed').toLowerCase();
         if (rawMsg.includes('already') || rawMsg.includes('exist') || rawMsg.includes('duplicate')) {
           this.errorMessage = 'User Already Registered!';

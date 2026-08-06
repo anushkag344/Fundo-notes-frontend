@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable, throwError, timer } from 'rxjs';
+import { map, catchError, retryWhen, mergeMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -9,208 +9,148 @@ import { map, catchError } from 'rxjs/operators';
 export class AuthService {
 
   private apiUrl = 'https://fundo-notes-backend.onrender.com/api/users';
-  // private apiUrl='https://fundo-notes-backend.onrender.com';
-
 
   constructor(private http: HttpClient) {}
-  register(request: any): Observable<any> {
-    return this.http.post<any>(
-      `${this.apiUrl}/register`,
-      request
-    ).pipe(
-      catchError((error) => {
-        let message = 'Registration failed';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai. Kripya 10 second baad firse Submit par click karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
-      })
+
+  /**
+   * Render free-tier cold start fix:
+   * status === 0 ka matlab backend abhi so raha hai (network unreachable).
+   * 8 second baad automatically retry karo, max 2 baar.
+   * Real server errors (4xx, 5xx) turant throw karo.
+   */
+  private withAutoRetry<T>(obs: Observable<T>): Observable<T> {
+    return obs.pipe(
+      retryWhen(errors =>
+        errors.pipe(
+          mergeMap((error, attempt) => {
+            // Sirf network/connection error pe retry karo (status 0)
+            if (error.status === 0 && attempt < 2) {
+              return timer(8000); // 8 sec baad retry
+            }
+            return throwError(() => error);
+          })
+        )
+      )
     );
   }
-  login(request: any): Observable<any> {
 
-    return this.http.post<any>(
-      `${this.apiUrl}/login`,
-      request,
-      { observe: 'response' }
+  /** Error message extract karo (server se jo bhi aaye) */
+  private extractMessage(error: any, fallback: string): string {
+    if (typeof error.error === 'string') return error.error;
+    if (error.error?.message) return error.error.message;
+    if (error.error?.error) return error.error.error;
+    return fallback;
+  }
+
+  register(request: any): Observable<any> {
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/register`, request)
     ).pipe(
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Registration failed')))
+      )
+    );
+  }
 
+  login(request: any): Observable<any> {
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/login`, request, { observe: 'response' })
+    ).pipe(
       map((response: any) => {
-
         let token = response.body?.data;
         if (!token) {
-          token = response.headers
-            .get('Authorization')
-            ?.replace('Bearer ', '');
+          token = response.headers.get('Authorization')?.replace('Bearer ', '');
         }
-
         if (token) {
           localStorage.setItem('token', token);
-          localStorage.setItem(
-            'currentUser',
-            JSON.stringify(request)
-          );
+          localStorage.setItem('currentUser', JSON.stringify(request));
         }
-
         return response.body;
-
       }),
-
-      catchError((error) => {
-        let message = 'Login failed';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
-      })
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Invalid Email or Password')))
+      )
     );
   }
+
   verifyOtp(email: string, otp: string): Observable<any> {
-    return this.http.post<any>(
-      `${this.apiUrl}/verify-otp`,
-      { email, otp }
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/verify-otp`, { email, otp })
     ).pipe(
-      catchError((error) => {
-        let message = 'OTP verification failed';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
-      })
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'OTP verification failed')))
+      )
     );
   }
+
   resendOtp(email: string): Observable<any> {
-    return this.http.post<any>(
-      `${this.apiUrl}/resend-otp?email=${email}`,
-      {}
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/resend-otp?email=${email}`, {})
     ).pipe(
-      catchError((error) => {
-        let message = 'Failed to resend OTP';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
-      })
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Failed to resend OTP')))
+      )
     );
   }
+
   forgotPassword(email: string): Observable<any> {
-
-    return this.http.post<any>(
-      `${this.apiUrl}/forgot-password-otp?email=${email}`,
-      {}
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/forgot-password-otp?email=${email}`, {})
     ).pipe(
-      catchError((error) => {
-        let message = 'Failed to send OTP';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
-      })
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Failed to send OTP')))
+      )
     );
   }
-  resetPassword(request: any): Observable<any> {
 
-    return this.http.post<any>(
-      `${this.apiUrl}/reset-password-otp`,
-      {
+  resetPassword(request: any): Observable<any> {
+    return this.withAutoRetry(
+      this.http.post<any>(`${this.apiUrl}/reset-password-otp`, {
         email: request.email,
         otp: request.otp,
         newPassword: request.password
-      }
-    ).pipe(
-      catchError((error) => {
-        let message = 'Password reset failed';
-        if (error.status === 0) {
-          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
-        } else if (typeof error.error === 'string') {
-          message = error.error;
-        } else if (error.error?.message) {
-          message = error.error.message;
-        } else if (error.error?.error) {
-          message = error.error.error;
-        }
-        return throwError(() => new Error(message));
       })
+    ).pipe(
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Password reset failed')))
+      )
     );
   }
+
   logout(): Observable<any> {
-
     const token = localStorage.getItem('token');
-
     return this.http.post<any>(
       `${this.apiUrl}/logout`,
       {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     ).pipe(
-      map((response) => {
+      map(response => {
         localStorage.removeItem('token');
         localStorage.removeItem('currentUser');
         return response;
       }),
-      catchError((error) => {
-        const message =
-          error.error?.message ||
-          error.error?.error ||
-          'Logout failed';
-
-        return throwError(() => new Error(message));
-      })
+      catchError(error =>
+        throwError(() => new Error(this.extractMessage(error, 'Logout failed')))
+      )
     );
   }
 
   isLoggedIn(): boolean {
     return localStorage.getItem('token') !== null;
   }
+
   getProfile() {
-  return this.http.get(`${this.apiUrl}/profile`, {
-    headers: {
-      Authorization: 'Bearer ' + localStorage.getItem('token')
-    }
-  });
-}
+    return this.http.get(`${this.apiUrl}/profile`, {
+      headers: { Authorization: 'Bearer ' + localStorage.getItem('token') }
+    });
+  }
+
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
   getCurrentUser(): any {
-
-  const user = localStorage.getItem('currentUser');
-
-  return user ? JSON.parse(user) : null;
-
-}
+    const user = localStorage.getItem('currentUser');
+    return user ? JSON.parse(user) : null;
+  }
 }

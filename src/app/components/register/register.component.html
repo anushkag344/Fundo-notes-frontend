@@ -127,7 +127,14 @@
 
         <div class="auth-footer">
           <a routerLink="/login" class="create-link">Sign in instead</a>
-          <button type="submit" class="btn-submit">Submit</button>
+          <button type="submit" class="btn-submit" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Submit</span>
+            <span *ngIf="isLoading" class="btn-spinner">
+              <span class="spinner-dot"></span>
+              <span class="spinner-dot"></span>
+              <span class="spinner-dot"></span>
+            </span>
+          </button>
         </div>
       </form>
     </div>
