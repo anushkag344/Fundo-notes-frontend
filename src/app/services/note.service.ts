@@ -70,33 +70,35 @@ getPinnedNotes(): Observable<any> {
   return this.http.get(`${this.apiUrl}/pinned`, this.getHeaders());
 }
 
+  private labelUrl = 'https://fundo-notes-backend.onrender.com/api/labels';
+
 getLabels(): Observable<any> {
-  return this.http.get('http://localhost:8080/api/labels', this.getHeaders());
+  return this.http.get(this.labelUrl, this.getHeaders());
 }
 
 createLabel(name: string): Observable<any> {
-  return this.http.post('http://localhost:8080/api/labels', { name }, this.getHeaders());
+  return this.http.post(this.labelUrl, { name }, this.getHeaders());
 }
 
 updateLabel(id: number, name: string): Observable<any> {
-  return this.http.put(`http://localhost:8080/api/labels/${id}`, { name }, this.getHeaders());
+  return this.http.put(`${this.labelUrl}/${id}`, { name }, this.getHeaders());
 }
 
 deleteLabel(id: number): Observable<any> {
-  return this.http.delete(`http://localhost:8080/api/labels/${id}`, this.getHeaders());
+  return this.http.delete(`${this.labelUrl}/${id}`, this.getHeaders());
 }
 
 addLabelToNote(labelId: number, noteId: number): Observable<any> {
-  return this.http.post(`http://localhost:8080/api/labels/${labelId}/notes/${noteId}`, {}, this.getHeaders());
+  return this.http.post(`${this.labelUrl}/${labelId}/notes/${noteId}`, {}, this.getHeaders());
 }
 
 
 removeLabelFromNote(labelId: number, noteId: number): Observable<any> {
-  return this.http.delete(`http://localhost:8080/api/labels/${labelId}/notes/${noteId}`, this.getHeaders());
+  return this.http.delete(`${this.labelUrl}/${labelId}/notes/${noteId}`, this.getHeaders());
 }
 
 getNotesByLabel(labelId: number): Observable<any> {
-  return this.http.get(`http://localhost:8080/api/labels/${labelId}/notes`, this.getHeaders());
+  return this.http.get(`${this.labelUrl}/${labelId}/notes`, this.getHeaders());
 }
 
 getCollaborators(noteId: number): Observable<any> {

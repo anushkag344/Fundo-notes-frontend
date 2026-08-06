@@ -9,6 +9,8 @@ import { map, catchError } from 'rxjs/operators';
 export class AuthService {
 
   private apiUrl = 'https://fundo-notes-backend.onrender.com/api/users';
+  // private apiUrl='https://fundo-notes-backend.onrender.com';
+
 
   constructor(private http: HttpClient) {}
   register(request: any): Observable<any> {
@@ -63,7 +65,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'Login failed';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha. Kripya Backend start karein!';
+          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
@@ -83,7 +85,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'OTP verification failed';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha.';
+          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
@@ -103,7 +105,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'Failed to resend OTP';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha.';
+          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
@@ -124,7 +126,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'Failed to send OTP';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha.';
+          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
@@ -149,7 +151,7 @@ export class AuthService {
       catchError((error) => {
         let message = 'Password reset failed';
         if (error.status === 0) {
-          message = 'Backend Server (port 8080) connect nahi ho raha.';
+          message = 'Backend Server wake-up ho raha hai ya response nahi de raha. Kripya 15 second baad firse try karein!';
         } else if (typeof error.error === 'string') {
           message = error.error;
         } else if (error.error?.message) {
@@ -194,7 +196,7 @@ export class AuthService {
     return localStorage.getItem('token') !== null;
   }
   getProfile() {
-  return this.http.get('http://localhost:8080/api/users/profile', {
+  return this.http.get(`${this.apiUrl}/profile`, {
     headers: {
       Authorization: 'Bearer ' + localStorage.getItem('token')
     }
